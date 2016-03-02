@@ -1,0 +1,386 @@
+/*Libreria Estandar*/
+#include <stdio.h>
+/*Libreria Matematicas*/
+#include <math.h>
+/*Libreria PLSQL Oracle*/
+#include <sqlda.h>
+EXEC SQL INCLUDE sqlca.h;
+
+/********************************************************************/
+/*                    Variables Globales                            */
+/********************************************************************/
+/*Declaracion de variable*/
+char   vc_cadenaGlobal[50];
+long   vl_long   = 0;
+float  vf_float  = 3.1416;
+double vd_double = 25.69;
+int    vi_int    = 15;
+
+/*Declaracion de variables con Apuntador */
+int   *vi_intApuntador;
+
+long lCont = 0;
+
+/********************************************************************/
+/*          Variables control Errores PLSQL o SQL                   */
+/********************************************************************/
+char msg[200];
+size_t buf_len, msg_len;
+char strMensaje[4000];
+char vc_stringConexion[50];
+
+/*Credenciales Acceso BD*/
+char *usuario    = "fco_usu"; /* "*" apuntador de memoria.*/
+char *contrasena = "fco_usupwd";
+char *sid        = "CARR";
+
+/*Variable para almacenar el String de la conexion.*/
+char vc_string_conexion[50]; 
+
+
+/********************************************************************/
+/*               Declaracion de una estructura                      */
+/********************************************************************/
+
+/*Estructura compuesta por un solo tipo de dato*/
+struct stEstructura{
+  char primerNombre[50];
+  char segundoNombre[50];
+  char primerApellido[50];
+  char segundoApellido[50];
+};
+
+typedef struct stEstructura stMyestructura; /*Defina un tipode estructura.*/
+
+stMyestructura tdmyEstructura; /*Declaracion de la variable de tipo estructura.*/
+
+
+/*Estructura compuesta por un varios tipos de datos*/
+
+struct infopersona
+{
+	char direccion[25];
+	char ciudad[20];
+	char provincia[20];
+	long int codigo_postal;	
+};
+
+/*Estrucutura anidada.*/
+struct empleado
+{
+	char nombre_empleado[25];
+	struct infopersona direcc_empleado; /* creamos direcc_empleado con "struct" del tipo "estructura infopersona" */
+	double salario;
+};
+
+typedef struct empleado stEmpleado;
+stEmpleado stMyEmpleado;
+
+/********************************************************************/
+/*                    Declaracion de funciones                      */
+/********************************************************************/
+void conectar(char *);
+
+void consultaBasica();
+
+void procesobrutal();
+
+/********************************************************************/
+/*                    Constantes Globales                           */
+/********************************************************************/
+#define VC_CONSTANTE 1000  
+
+
+/*Metodo incial.*/
+int main(int argc, char *argv[]){ 
+
+	/*imprimirAnuncio(); /*Anuncio parroquial.!*/
+	vi_intApuntador = 12;
+
+	/********************************************************************/
+	/*                    Variables Privadas                            */
+	/********************************************************************/
+	char vc_cadenaPrivada[50]; /*Declaracion la variable*/
+	int vi_funcion;
+	char vc_estructura[60];
+
+	/*Instancia variables.*/
+	strcpy(vc_cadenaPrivada, "Este es el contenido de una cadena Privada\n");
+	strcpy(vc_cadenaGlobal, "Esto es el contenido de una cadena Global\n");
+
+	/*Salida.*/
+	printf("\nHola Mundo Pro*C.\n"); 
+	printf(" \n");
+	printf("%s",vc_cadenaPrivada); 
+	printf(" \n"); 
+	printf("%s",vc_cadenaGlobal); /*"%s" = cadena*/
+	printf(" \n"); 
+	printf("%d",VC_CONSTANTE);    /*"%d" = entero*/
+	printf(" \n"); 
+	printf("%d",vl_long);         /*"%l" = long, int*/
+	printf(" \n"); 
+	printf("%.3f",vf_float);      /*"%f" = float, .nf => n, hace referencia a la precision.*/
+	printf(" \n"); 
+	printf("%f",vd_double);       /*"%f" es funcional para double*/
+	printf(" \n"); 
+	printf("%i",vi_int);          /*"%i" = int*/
+	printf(" \n"); 
+	printf("%i",vi_intApuntador);
+	printf(" \n"); 
+	
+	/*Salida + formato*/
+	printf("---%*d----\n", 6, vi_int);
+	printf(" \n");
+	
+	/*Salida concatenando*/
+	printf("Esto es un texto y el valor de la variable vi_int => %4d y el valor de la variable vc_cadenaGlobal => %3s.\n", vi_int, vc_cadenaGlobal);
+	printf(" \n");
+	
+	/*Llamado a una función*/
+	vi_funcion = sumar(2,5);
+	
+	printf("%i",vi_funcion);
+	printf(" \n"); 
+	
+	/*Implementacion de la libreria #include <math.h>*/
+	printf("%i", fmod ( 3, 2 ));
+	printf(" \n"); 
+
+    /*------------------------------------------------------------------*/
+	/*                       Conexion a la base                         */
+	/*------------------------------------------------------------------*/
+    /*Construye el String de conexion.*/
+	strcpy(vc_stringConexion, usuario);
+	strcat(vc_stringConexion, "/");
+	strcat(vc_stringConexion, contrasena);
+	strcat(vc_stringConexion, "@");
+	strcat(vc_stringConexion, sid);
+	
+	/*Conectar a la base de datos*/
+	conectar (vc_stringConexion);
+
+	/*Realizar consulta basica a la base de datos.*/
+	consultaBasica();
+	
+	/*------------------------------------------------------------------*/
+	/*         Almacenando datos en una estrucuta                       */
+	/*------------------------------------------------------------------*/
+	
+	/*Almacenando datos en la estructura*/
+	strcpy(tdmyEstructura.primerNombre,"Tu");
+	strcpy(tdmyEstructura.segundoNombre,"Abuela");
+	strcpy(tdmyEstructura.primerApellido,"En");
+	strcpy(tdmyEstructura.segundoApellido,"Tanga");
+	
+	/*Impresion datos de la estructura*/
+	printf(" \n"); 
+	printf("Nombre almacenado en la estrucutura => %s %s %s %s \n", tdmyEstructura.primerNombre, tdmyEstructura.segundoNombre, tdmyEstructura.primerApellido, tdmyEstructura.segundoApellido);
+	printf(" \n"); 
+	
+	/*Estrucutra anidada*/
+	strcpy(stMyEmpleado.nombre_empleado, "Juan Mendieta");
+	strcpy(stMyEmpleado.direcc_empleado.direccion, "Av siempre viva");
+	strcpy(stMyEmpleado.direcc_empleado.ciudad, "Bogota");
+    strcpy(stMyEmpleado.direcc_empleado.provincia, "Cundinamarca");
+	stMyEmpleado.direcc_empleado.codigo_postal = 1155;
+	stMyEmpleado.salario = 1.235000;
+	
+	/*Impresion datos de la estructura*/
+	printf(" \n"); 
+	printf("Datos del empleado => Nombre %s, Direccion %s, Ciudad %s, Departamento %s, Postal %d y Salario Actual %.6f \n", stMyEmpleado.nombre_empleado, 
+																															stMyEmpleado.direcc_empleado.direccion, 
+																															stMyEmpleado.direcc_empleado.ciudad, 
+																															stMyEmpleado.direcc_empleado.provincia,
+																															stMyEmpleado.direcc_empleado.codigo_postal,
+																															stMyEmpleado.salario);
+	printf(" \n"); 
+	
+	procesobrutal();
+	
+	/*Si la ejecucion a terminado satisfactoria-mente se debe retornar un 0 (cero)*/
+	return 0; 
+}
+
+/*Funcion Custom*/
+int sumar (int a, int b){
+  /*Declaracion variable a retornar*/
+  int resultado;
+  
+  resultado = a+b; /*Operacion Estandar*/
+  
+  if (resultado < 0) { /*valida que el resultado de la suma sea positivo*/
+    return -1;
+  }
+  
+  return resultado;
+
+}
+
+/*Funcion Custom para la conexion a la base de datos.*/
+void conectar (char *vc_string){
+	
+  	EXEC SQL CONNECT :vc_string;
+	EXEC ORACLE OPTION (char_map=string);
+
+}
+
+void consultaBasica(){
+
+	long       vc_variable;
+
+    EXEC SQL
+    SELECT tipo_registro_id
+      INTO :vc_variable
+      FROM FCO.SIA_CAMPOS_FORMATO s
+      WHERE s.campo_formato_id = 54;
+	  
+	if ( sqlca.sqlcode != 0 ){
+		buf_len = sizeof (msg); 
+		sqlglm(msg, &buf_len, &msg_len);   
+		sprintf(strMensaje,"Error al consultar la tabla FCO.SIA_CAMPOS_FORMATO : %s\n", msg);
+		printf("%s",strMensaje);
+		/*escribirLog();*/ 
+		exit(1);
+	}
+
+	printf(" \n"); 
+	printf("El resultado de la ejecucion de la funcion consultaBasica() es => " );
+	printf("%d",vc_variable);         /*"%l" = long*/
+	printf(" \n"); 
+
+}
+
+
+void procesobrutal(){
+
+    char sSQL[10000]; /*Variable para armar el SQl a ejecutar.*/
+	memset(sSQL, '\0', sizeof(sSQL)); /*Asignacion de memoria.*/
+	
+	long vl_qtyRegistros = 0; /*Variable para almacenar la cantidad de registros a procesar.*/
+
+	/*Declaracion tipos de variables a recibir los datos del cursor.*/
+	EXEC SQL BEGIN DECLARE SECTION;
+
+	  varchar nombre_archivo     [VC_CONSTANTE][50]; /*[Cantidad de registros][dimension del dato]*/
+	  varchar clase_ticket       [VC_CONSTANTE][50];
+	  varchar fecha_alta         [VC_CONSTANTE][50]; /*Este dato en la base de datos esta declarado como DATE.*/
+	  long    duracion_real      [VC_CONSTANTE];
+	  varchar linea_origen       [VC_CONSTANTE][50];
+	  int     interconectante_id [VC_CONSTANTE];
+	  
+	EXEC SQL END DECLARE SECTION; 
+  
+    /*Creacion del String con la consulta*/  
+	strcpy(sSQL, "SELECT srt.nombre_archivo, \n");
+	strcat(sSQL, "       srt.clase_ticket, \n");
+	strcat(sSQL, "       to_char(srt.fecha_alta, 'dd/mm/yy HH24:MI:SS'), \n");
+	strcat(sSQL, "       srt.duracion_real, \n");
+	strcat(sSQL, "       srt.linea_origen, \n");
+	strcat(sSQL, "       srt.interconectante_id \n");
+	strcat(sSQL, "  FROM FCO.SIA_RELACIONES_TICK srt \n");
+	strcat(sSQL, " WHERE trunc(srt.fecha_alta) <= TRUNC(SYSDATE)\n");
+	strcat(sSQL, "   AND srt.duracion_real      = 120.00\n");
+	strcat(sSQL, "   AND srt.linea_origen       > 88100000\n");
+  
+    /*Prepara el Query construido.*/
+	EXEC SQL PREPARE SQLSA FROM :sSQL;
+	/*Declara el cursor.*/
+	EXEC SQL DECLARE mi_cursor CURSOR FOR SQLSA;
+	/*Abre el cursor.*/
+	EXEC SQL OPEN mi_cursor;
+	
+	/*Verifica si la ejecucion fue satisfactoria.*/
+	if ( sqlca.sqlcode != 0 ){
+		buf_len = sizeof (msg); 
+		sqlglm(msg, &buf_len, &msg_len);   
+		sprintf(strMensaje,"Error Abriendo el cursor mi_cursor : %s\n", msg);
+		printf("%s",strMensaje);
+		if(sqlca.sqlcode != 1403){ /*Si no hay datos en el cursor.*/
+			printf("%s", strMensaje );
+			exit(1);			
+		}
+		exit(1);
+	}
+	
+	/*Recorrer el cursor.*/
+	while(sqlca.sqlcode == 0){
+	
+	  /*Asignacion de memoria.*/
+	  memset(duracion_real,      0, VC_CONSTANTE * sizeof(long));
+	  memset(interconectante_id, 0, VC_CONSTANTE * sizeof(int));
+	  
+	  /*ejecucion del cursor como si fuera un bulk collect*/
+	  
+	  EXEC SQL FOR :VC_CONSTANTE FETCH mi_cursor INTO :nombre_archivo, 
+													  :clase_ticket, 
+													  :fecha_alta, 
+													  :duracion_real, 
+													  :linea_origen, 
+													  :interconectante_id;
+													  
+		/*Verifica si la ejecucion fue satisfactoria.*/
+		if ( sqlca.sqlcode != 0 ){
+			buf_len = sizeof (msg); 
+			sqlglm(msg, &buf_len, &msg_len);   
+			sprintf(strMensaje,"Error recorriendo mi_cursor : %s\n", msg);
+			printf("%s",strMensaje);
+			if(sqlca.sqlcode != 1403){ /*Si no hay datos en el cursor.*/
+				printf("%s", strMensaje );
+				exit(1);			
+			}
+		}
+		
+		vl_qtyRegistros = sqlca.sqlerrd[2] - vl_qtyRegistros; /*Captura la cantidad de registros a procesar.*/
+		
+		/*aja.. y aca que.!*/
+		
+		for (lCont = 0; lCont < vl_qtyRegistros; lCont++){
+		
+		    nombre_archivo[lCont].arr[nombre_archivo[lCont].len] = '\0'; /* .arr = longitud del arreglo; .len = longitud de la cadena*/
+			clase_ticket[lCont].arr[clase_ticket[lCont].len]     = '\0';
+			fecha_alta[lCont].arr[fecha_alta[lCont].len]         = '\0';
+			linea_origen[lCont].arr[linea_origen[lCont].len]     = '\0';
+		     
+			printf("%05d %s %s %s %d %s %d \n",  lCont,
+										nombre_archivo[lCont].arr, /*.arr es para estructuras de tipo varchar*/
+										clase_ticket[lCont].arr,
+										fecha_alta[lCont].arr,
+										duracion_real[lCont],
+										linea_origen[lCont].arr,
+										interconectante_id[lCont]);
+		
+		}
+		
+		vl_qtyRegistros = sqlca.sqlerrd[2]; /*reasigna el valor de los registros procesados.*/
+	
+	}
+	
+	/*Cerrar Cursor.*/
+	EXEC SQL CLOSE mi_cursor;
+  
+}
+
+/*Publicidad politica pagada.!*/
+int imprimirAnuncio(){
+
+	char vc_Anuncio [1000000];
+
+    strcpy(vc_Anuncio, " 8888888b.  d8b                                        d8888         d8b \n");                  
+    strcat(vc_Anuncio, " 888   Y88b Y8P                                       d88888         Y8P \n");                   
+    strcat(vc_Anuncio, " 888    888                                          d88P888 \n");                               
+    strcat(vc_Anuncio, " 888    888 888  .d88b.   .d88b.   .d88b.           d88P 888 888d888 888 88888888  8888b. \n");  
+    strcat(vc_Anuncio, " 888    888 888 d8P  Y8b d88P 88b d88  88b         d88P  888 888P    888    d88P       88b \n"); 
+    strcat(vc_Anuncio, " 888    888 888 88888888 888  888 888  888        d88P   888 888     888   d88P   .d888888 \n"); 
+    strcat(vc_Anuncio, " 888  .d88P 888 Y8b.     Y88b 888 Y88..88P       d8888888888 888     888  d88P    888  888 \n"); 
+    strcat(vc_Anuncio, " 8888888P   888   Y8888    Y88888   Y88P        d88P     888 888     888 88888888  Y888888 \n"); 
+    strcat(vc_Anuncio, "                              888 \n");                                                          
+    strcat(vc_Anuncio, "                         Y8b d88P \n");                                                          
+    strcat(vc_Anuncio, "                           Y88P  \n");                                                           
+
+    printf(" \n");
+    printf("%s", vc_Anuncio);
+    printf(" \n");
+
+    return 0;
+
+}
